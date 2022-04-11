@@ -11,4 +11,8 @@ FROM registry.access.redhat.com/ubi8/ubi-micro:8.5
 
 WORKDIR /root
 
-COPY --from=gobuilder /policy-generator-webhook/work-bin/policy-generator-webhook /root/
+COPY --from=gobuilder /policy-generator-webhook/work-bin/policy-generator-webhook .
+
+USER 65324:65324
+
+ENTRYPOINT ["/root/policy-generator-webhook"]
