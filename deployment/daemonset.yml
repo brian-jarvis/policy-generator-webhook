@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: acm-policy-generator
+  name: gitopts-repo-mutator-webhook
+  labels:
+    app: gitopts-repo-mutator
+spec:
+  selector:
+    matchLabels:
+      app: gitopts-repo-mutator
+  template:
+    metadata:
+      name: gitopts-repo-mutator
+      labels:
+        app: gitopts-repo-mutator
+    spec:
+      serviceAccountName: mutator
+      containers:
+      - name: mutator 
+        image: quay.io/bjarvis/acm-gitopts-repo-mutator:latest
+        imagePullPolicy: Always
+        ports:
+          - name: https
+            containerPort: 9443
+        volumeMounts:
+          - name: webhook-certs
+            mountPath: /etc/webhook/certs
+            readOnly: true
+      volumes:
+      - name: webhook-certs
+        secret:
+          defaultMode: 420
+          secretName: webhook-certs
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
+  revisionHistoryLimit: 2

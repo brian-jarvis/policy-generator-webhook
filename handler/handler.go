@@ -5,21 +5,22 @@ import (
   "encoding/json"
   "fmt"
   "net/http"
-  "reflect"
-  "strings"
+ // "reflect"
+ // "strings"
 
   "github.com/go-logr/logr"
-  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+  //metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
   corev1 "k8s.io/api/core/v1"
   "k8s.io/apimachinery/pkg/labels"
-  utilerrors "k8s.io/apimachinery/pkg/util/errors"
+  "k8s.io/apimachinery/pkg/selection"
+  //utilerrors "k8s.io/apimachinery/pkg/util/errors"
   "sigs.k8s.io/controller-runtime/pkg/client"
   "sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 const (
-  annotationPrefix = "policygenerator.admission.kubernetes.io"
+  gitOpsAppLabel = "policygenerator.admission.kubernetes.io"
 )
 
 // +kubebuilder:webhook:path=/mutate,mutating=true,failurePolicy=ignore,groups="",resources=pods,verbs=create,versions=v1,name=mpod.redhatcop.redhat.io,sideEffects=None,admissionReviewVersions={v1,v1beta1}
@@ -43,6 +44,7 @@ func (a *PolicyGeneratorMutator) Handle(ctx context.Context, req admission.Reque
     return admission.Allowed("")
   }
 
+  logger.Info("test logger")
   pod := &corev1.Pod{}
 
   err := a.decoder.Decode(req, pod)
@@ -56,18 +58,41 @@ func (a *PolicyGeneratorMutator) Handle(ctx context.Context, req admission.Reque
     return admission.Allowed("Mirror Pod")
   }
 
+  // Ignore if not the gitops repo server
+  gitOpsReq, _ := labels.NewRequirement("app.kubernetes.io/name", selection.Equals, []string{"openshift-gitops-repo-server"})
+ 
+  // Init and add to selector.
+  selector := labels.NewSelector()
+  selector = selector.Add(*gitOpsReq)
+  // check if the pod labels match the selector
+  if !selector.Matches(labels.Set(pod.Labels)) {
+    return admission.Allowed("Exclude pod not gitops repo server")
+  }
+
   // Create the emptyDir to hold the generator
+  emptyVolume := corev1.Volume{
+                    Name: "policy-generator",
+                    VolumeSource: corev1.VolumeSource{
+                      EmptyDir: &corev1.EmptyDirVolumeSource{},
+                    },
+                  }
 
   // Create the volume mount
+  emptyMount := corev1.VolumeMount{
+                    Name:      "policy-generator",
+                    MountPath: "/etc/kustomize",
+                }
 
   // Create the initContainer to copy the generator into the emptyDir
 
   // Add the emptyDir volume to the pod
+  pod.Spec.Volumes = append(pod.Spec.Volumes, emptyVolume)
 
   // Add the intiContainer to the pod
 
   // Add the volumemount to the container(s)
-
+  vms := pod.Spec.Containers[0].VolumeMounts
+  pod.Spec.Containers[0].VolumeMounts = append(vms, emptyMount)
   
 
   // End Mutation
@@ -83,7 +108,7 @@ func (a *PolicyGeneratorMutator) Handle(ctx context.Context, req admission.Reque
 // A decoder will be automatically injected.
 
 // InjectDecoder injects the decoder.
-func (a *PodPresetMutator) InjectDecoder(d *admission.Decoder) error {
+func (a *PolicyGeneratorMutator) InjectDecoder(d *admission.Decoder) error {
   a.decoder = d
   return nil
 }

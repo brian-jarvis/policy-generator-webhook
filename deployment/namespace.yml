@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    openshift.io/description: "Mutating webhook server"
+    openshift.io/display-name: ""
+  name: acm-policy-generator

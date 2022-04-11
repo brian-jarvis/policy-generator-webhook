@@ -1,0 +1,23 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: mutationservices.v1beta1.admission.bry.redhat.io
+  labels:
+    app: gitopts-repo-mutator
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"
+webhooks:
+- name: mutationservices.v1beta1.admission.bry.redhat.io
+  clientConfig:
+    service:
+      namespace: default
+      name: kubernetes
+      path: /apis/v1beta1.admission.bry.redhat.io/v1beta1/mutationservices
+  rules:
+  - operations: ["CREATE"]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["pods"]
+  sideEffects: None
+  admissionReviewVersions: 
+    - v1

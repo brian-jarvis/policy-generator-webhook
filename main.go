@@ -32,8 +32,7 @@ import (
   "sigs.k8s.io/controller-runtime/pkg/log/zap"
   "sigs.k8s.io/controller-runtime/pkg/webhook"
 
-  // "github.com/brian-jarvis/policy-generator-webhook/pkg/handler"
-  "pkg/handler"
+  "policy-generator-webhook/handler"
   // +kubebuilder:scaffold:imports
 )
 
