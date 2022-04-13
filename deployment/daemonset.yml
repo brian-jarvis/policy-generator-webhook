@@ -18,6 +18,9 @@ spec:
       serviceAccountName: mutator
       containers:
       - name: mutator 
+        env:
+        - name: WEBHOOK_CERT_DIR
+          value: /etc/webhook/certs
         image: quay.io/bjarvis/acm-gitopts-repo-mutator:latest
         imagePullPolicy: Always
         ports:

@@ -45,8 +45,8 @@ const (
   webHookCertDirEnv     = "WEBHOOK_CERT_DIR"
   defaultWebhookCertDir = "/apiserver.local.config/certificates"
 
-  webhookCertName = "apiserver.crt"
-  webhookKeyName  = "apiserver.key"
+  webhookCertName = "tls.crt"
+  webhookKeyName  = "tls.key"
 )
 
 func init() {

@@ -10,14 +10,18 @@ webhooks:
 - name: mutationservices.v1beta1.admission.bry.redhat.io
   clientConfig:
     service:
-      namespace: default
-      name: kubernetes
-      path: /apis/v1beta1.admission.bry.redhat.io/v1beta1/mutationservices
+      # namespace: default
+      # name: kubernetes
+      # path: /apis/bry.redhat.io/v1beta1/mutationservices
+      namespace: acm-policy-generator
+      name: gitopts-repo-mutator
+      path: /mutate
   rules:
   - operations: ["CREATE"]
     apiGroups: [""]
     apiVersions: ["v1"]
     resources: ["pods"]
   sideEffects: None
+  failurePolicy: Ignore
   admissionReviewVersions: 
     - v1

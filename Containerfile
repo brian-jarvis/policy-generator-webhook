@@ -1,9 +1,11 @@
 FROM registry.redhat.io/rhel8/go-toolset:1.16 as gobuilder
 
 WORKDIR /policy-generator-webhook
+USER root
 
 COPY . .
 
+RUN mkdir work-bin
 RUN go build -mod readonly -o work-bin/policy-generator-webhook ./
 
 

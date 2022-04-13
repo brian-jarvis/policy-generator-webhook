@@ -23,7 +23,7 @@ const (
   gitOpsAppLabel = "policygenerator.admission.kubernetes.io"
 )
 
-// +kubebuilder:webhook:path=/mutate,mutating=true,failurePolicy=ignore,groups="",resources=pods,verbs=create,versions=v1,name=mpod.redhatcop.redhat.io,sideEffects=None,admissionReviewVersions={v1,v1beta1}
+// +kubebuilder:webhook:path=/mutate,mutating=true,failurePolicy=ignore,groups="",resources=pods,verbs=create,versions=v1,name=mpod.redhatcop.redhat.io,sideEffects=None,admissionReviewVersions={v1}
 // +kubebuilder:rbac:groups=redhatcop.redhat.io,resources=podpresets,verbs=get;list;watch;create;update;patch
 // +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;update;patch
 
@@ -37,6 +37,7 @@ type PolicyGeneratorMutator struct {
 // PolicyGeneratorMutator adds an annotation to every incoming pods.
 func (a *PolicyGeneratorMutator) Handle(ctx context.Context, req admission.Request) admission.Response {
   logger := a.Log.WithValues("policy-generator-webhook", fmt.Sprintf("%s/%s", req.Namespace, req.Name))
+
 
   // Ignore all calls to subresources or resources other than pods.
   // Ignore all operations other than CREATE.
@@ -80,15 +81,35 @@ func (a *PolicyGeneratorMutator) Handle(ctx context.Context, req admission.Reque
   // Create the volume mount
   emptyMount := corev1.VolumeMount{
                     Name:      "policy-generator",
-                    MountPath: "/etc/kustomize",
+                    MountPath: "/kustomize/plugin/policy.open-cluster-management.io/v1/policygenerator",
                 }
 
   // Create the initContainer to copy the generator into the emptyDir
+  initCont := corev1.Container{
+                Name:         "kustomize-policy",
+                Image:        "quay.io/bjarvis/policy-generator:latest",
+                Command:      []string{"/bin/sh"},
+                Args:          []string{"-c", `echo copy from; 
+                                  ls -l /root/.config/kustomize/plugin/policy.open-cluster-management.io/v1/;
+                                  cp -r /root/.config/kustomize/plugin/policy.open-cluster-management.io/v1/policygenerator/linux-amd64-PolicyGenerator /kust-policy/PolicyGenerator;
+                                  echo what is in empty dir?;
+                                  ls -l /kust-policy;`,
+                                },
+                ImagePullPolicy: "Always",
+                Env:          []corev1.EnvVar{},
+                VolumeMounts: []corev1.VolumeMount{
+                                corev1.VolumeMount{
+                                  Name:      "policy-generator",
+                                  MountPath: "/kust-policy",
+                              },
+                            }, 
+  }
 
   // Add the emptyDir volume to the pod
   pod.Spec.Volumes = append(pod.Spec.Volumes, emptyVolume)
 
   // Add the intiContainer to the pod
+  pod.Spec.InitContainers = append(pod.Spec.InitContainers, initCont)
 
   // Add the volumemount to the container(s)
   vms := pod.Spec.Containers[0].VolumeMounts

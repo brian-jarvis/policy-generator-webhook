@@ -26,11 +26,15 @@ rules:
   - get
   - list
   - watch
+  - create
 - apiGroups:
   - admission.bry.redhat.io
   resources:
   - mutationservice 
   verbs:
+  - get
+  - list
+  - watch
   - create
 
 ---

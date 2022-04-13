@@ -1,11 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- apiservice.yml
-- daemonset.yml
 - mutatingwebhook.yml
 - namespace.yml
 - rbac.yml
 - service.yaml
 - serviceaccount.yml
-- webhook-crd.yml
+- daemonset.yml
