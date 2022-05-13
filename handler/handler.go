@@ -60,7 +60,7 @@ func (a *PolicyGeneratorMutator) Handle(ctx context.Context, req admission.Reque
   }
 
   // Ignore if not the gitops repo server
-  gitOpsReq, _ := labels.NewRequirement("app.kubernetes.io/name", selection.Equals, []string{"openshift-gitops-repo-server"})
+  gitOpsReq, _ := labels.NewRequirement("app.kubernetes.io/name", selection.In, []string{"repo-server"})
  
   // Init and add to selector.
   selector := labels.NewSelector()
