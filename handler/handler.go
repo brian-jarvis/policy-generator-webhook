@@ -5,6 +5,7 @@ import (
   "encoding/json"
   "fmt"
   "net/http"
+  "regexp"
  // "reflect"
  // "strings"
 
@@ -12,8 +13,6 @@ import (
   //metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
   corev1 "k8s.io/api/core/v1"
-  "k8s.io/apimachinery/pkg/labels"
-  "k8s.io/apimachinery/pkg/selection"
   //utilerrors "k8s.io/apimachinery/pkg/util/errors"
   "sigs.k8s.io/controller-runtime/pkg/client"
   "sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -32,6 +31,15 @@ type PolicyGeneratorMutator struct {
   Client  client.Client
   decoder *admission.Decoder
   Log     logr.Logger
+}
+
+func isRepoServer(labelValue string) bool {
+  result, err := regexp.MatchString(".*repo-server.*", labelValue)
+  if err != nil {
+    return false
+  }
+
+  return result
 }
 
 // PolicyGeneratorMutator adds an annotation to every incoming pods.
@@ -60,13 +68,8 @@ func (a *PolicyGeneratorMutator) Handle(ctx context.Context, req admission.Reque
   }
 
   // Ignore if not the gitops repo server
-  gitOpsReq, _ := labels.NewRequirement("app.kubernetes.io/name", selection.In, []string{"repo-server"})
- 
-  // Init and add to selector.
-  selector := labels.NewSelector()
-  selector = selector.Add(*gitOpsReq)
-  // check if the pod labels match the selector
-  if !selector.Matches(labels.Set(pod.Labels)) {
+  appNameLabel := pod.Labels["app.kubernetes.io/name"]
+  if appNameLabel != "" && !isRepoServer(appNameLabel) {
     return admission.Allowed("Exclude pod not gitops repo server")
   }
 
