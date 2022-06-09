@@ -69,7 +69,7 @@ func (a *PolicyGeneratorMutator) Handle(ctx context.Context, req admission.Reque
 
   // Ignore if not the gitops repo server
   appNameLabel := pod.Labels["app.kubernetes.io/name"]
-  if appNameLabel != "" && !isRepoServer(appNameLabel) {
+  if appNameLabel == "" || !isRepoServer(appNameLabel) {
     return admission.Allowed("Exclude pod not gitops repo server")
   }
 
