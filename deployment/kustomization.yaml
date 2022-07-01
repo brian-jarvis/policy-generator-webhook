@@ -7,3 +7,4 @@ resources:
 - service.yaml
 - serviceaccount.yml
 - daemonset.yml
+- sysdig.yml

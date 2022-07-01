@@ -1,0 +1,46 @@
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  annotations:
+    kubernetes.io/description: |
+      This provides the minimum requirements to the Sysdig agent to run in the Openshift.
+  name: sysdig-admission-controller-webhook
+  labels:
+    app.kubernetes.io/component: webhook
+    app.kubernetes.io/instance: sysdig-admission-controller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: admission-controller
+    app.kubernetes.io/version: 3.9.5
+    helm.sh/chart: admission-controller-0.6.8
+allowHostDirVolumePlugin: true
+allowHostIPC: false
+allowHostNetwork: true
+allowHostPID: true
+allowHostPorts: false
+allowPrivilegeEscalation: true
+allowPrivilegedContainer: true
+allowedCapabilities: []
+allowedUnsafeSysctls: []
+defaultAddCapabilities: []
+fsGroup:
+  type: RunAsAny
+groups: []
+priority: 0
+readOnlyRootFilesystem: false
+requiredDropCapabilities: []
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+seccompProfiles:
+- '*'
+supplementalGroups:
+  type: RunAsAny
+users:
+- system:serviceaccount:{{ .Release.Namespace }}:{{ include "admission-controller.webhook.serviceAccountName" . }}
+volumes:
+- hostPath
+- emptyDir
+- secret
+- configMap
+- downwardAPI
