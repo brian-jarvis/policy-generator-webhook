@@ -8,4 +8,3 @@ resources:
 - serviceaccount.yml
 - daemonset.yml
 # - sysdig.yml
-- securitycontext.yml
